@@ -1,5 +1,9 @@
-const { ApolloServer } = require("apollo-server-express");
+const { ApolloServer } = require("@apollo/server");
 const { ApolloGateway, IntrospectAndCompose } = require("@apollo/gateway");
+const { expressMiddleware } = require("@apollo/server/express4")
+const http = require('http');
+const cors = require('cors');
+const { json } = require('body-parser')
 var express = require('express');
 var Sentry = require('@sentry/node');
 
@@ -16,7 +20,7 @@ const supergraphSdl = new IntrospectAndCompose({
 });
 
 Sentry.init({
-    dsn: "{DSN}",
+    dsn: "https://5f3caa5fa5224df096b0da328346627a@o4504533099937792.ingest.sentry.io/4505321195241472",
     integrations: [
       // enable HTTP calls tracing
       new Sentry.Integrations.Http({ tracing: true }),
@@ -31,6 +35,7 @@ Sentry.init({
     tracesSampleRate: 1.0,
 })
 
+const httpServer = http.createServer(app);
 
 // RequestHandler creates a separate execution context, so that all
 // transactions/spans/breadcrumbs are isolated across requests
@@ -64,10 +69,13 @@ const gateway = new ApolloGateway({
 
   await server.start()
 
-  server.applyMiddleware({ app });
+  app.use('/graphql', cors(), json(), expressMiddleware(server, {
+    context: async ({req}) => ({ token: req.headers.token}),
+  }))
+
 
   // Start the server
-app.listen({ port: 4000 }, () => {
-    console.log(`Server ready at http://localhost:4000${server.graphqlPath}`);
-  });
+  httpServer.listen({ port: 4000 }, () => {
+      console.log(`Server ready at http://localhost:4000${server.graphqlPath}`);
+    });
 })();

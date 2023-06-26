@@ -5,11 +5,13 @@
     },
     "dependencies": {
         "@apollo/federation": "latest",
+        "@apollo/server": "^4.3.0",
         "@sentry/node": "^7.54.0",
-        "apollo-server": "latest",
-        "apollo-server-express": "^3.12.0",
+        "body-parser": "^1.20.2",
+        "cors": "^2.8.5",
         "express": "^4.18.2",
-        "graphql": "latest"
+        "graphql": "latest",
+        "graphql-tag": "^2.12.6"
     },
     "volta": {
         "node": "18.0.0"

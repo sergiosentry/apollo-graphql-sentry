@@ -1,7 +1,12 @@
-const { ApolloServer, gql } = require("apollo-server-express");
+const { ApolloServer } = require("@apollo/server");
+const { expressMiddleware } = require("@apollo/server/express4")
 const { buildFederatedSchema } = require("@apollo/federation");
 var Sentry = require('@sentry/node');
 var express = require('express');
+const gql = require('graphql-tag');
+const http = require('http');
+const cors = require('cors');
+const { json } = require('body-parser')
 
 
 const app = express();
@@ -23,6 +28,8 @@ Sentry.init({
     // We recommend adjusting this value in production
     tracesSampleRate: 0,
   })
+
+const httpServer = http.createServer(app);
 
 Sentry.configureScope( function (scope) {
   scope.setTag("process", "test_1");
@@ -85,10 +92,12 @@ const resolvers = {
   
     await server.start()
   
-    server.applyMiddleware({ app });
+    app.use('/graphql', cors(), json(), expressMiddleware(server, {
+      context: async ({req}) => ({ token: req.headers.token}),
+    }))
   
     // Start the server
-    app.listen({ port: 4001 }, () => {
+    httpServer.listen({ port: 4001 }, () => {
         console.log(`Server ready at http://localhost:4001${server.graphqlPath}`);
     });
 
