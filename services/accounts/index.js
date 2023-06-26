@@ -3,10 +3,11 @@ const { buildFederatedSchema } = require("@apollo/federation");
 var Sentry = require('@sentry/node');
 var express = require('express');
 
+
 const app = express();
 
 Sentry.init({
-    dsn: "{DSN}",
+    dsn: "{SENTRY_DSN}",
     integrations: [
       // enable HTTP calls tracing
       new Sentry.Integrations.Http({ tracing: true }),
@@ -22,6 +23,10 @@ Sentry.init({
     // We recommend adjusting this value in production
     tracesSampleRate: 0,
   })
+
+Sentry.configureScope( function (scope) {
+  scope.setTag("process", "test_1");
+})
   
 // RequestHandler creates a separate execution context, so that all
 // transactions/spans/breadcrumbs are isolated across requests
@@ -33,6 +38,13 @@ app.use(Sentry.Handlers.tracingHandler());
 
 // The error handler must be before any other error middleware and after all controllers
 app.use(Sentry.Handlers.errorHandler());
+
+app.use("/", (req, res, next) => {
+  console.log("======================================================");
+  console.log(req.headers)
+  
+  next()
+})
 
 const typeDefs = gql`
   extend type Query {
@@ -60,6 +72,7 @@ const resolvers = {
 };
 
 
+
 (async () => {
     const server = new ApolloServer({
         schema: buildFederatedSchema([
@@ -67,7 +80,7 @@ const resolvers = {
             typeDefs,
             resolvers
           }
-        ])
+        ]),
     });
   
     await server.start()
@@ -75,10 +88,11 @@ const resolvers = {
     server.applyMiddleware({ app });
   
     // Start the server
-  app.listen({ port: 4001 }, () => {
-      console.log(`Server ready at http://localhost:4001${server.graphqlPath}`);
+    app.listen({ port: 4001 }, () => {
+        console.log(`Server ready at http://localhost:4001${server.graphqlPath}`);
     });
-  })();
+
+    })();
 
 const users = [
   {

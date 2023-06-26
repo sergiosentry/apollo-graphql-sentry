@@ -10,5 +10,8 @@
         "apollo-server-express": "^3.12.0",
         "express": "^4.18.2",
         "graphql": "latest"
+    },
+    "volta": {
+        "node": "18.0.0"
     }
 }
